@@ -19,19 +19,19 @@
                     <% for (product of products) { %>
                         
                         <tr>
-                            <td><%= product.title %></td>
+                            <td><%= product.productId.title %></td>
                             <td><%= product.qty %></td>
-                            <td><%= product.price %></td>
-                            <td><%= product.price * product.qty %></td>
+                            <td><%= product.productId.price %></td>
+                            <td><%= product.productId.price * product.qty %></td>
                             <td>
                                 <form action="/cart-delete-item" method="post">
-                                    <input type="hidden" name="productId" value="<%= product._id %>">
-                                    <input type="hidden" name="price" value="<%= product.price %>">
+                                    <input type="hidden" name="productId" value="<%= product.productId._id %>">
+                                    <input type="hidden" name="price" value="<%= product.productId.price %>">
                                     <button type="submit" class="btn">Delete</button>
                                 </form>
                             </td>
                         </tr>
-                        <% total = total + (product.price * product.qty) %>
+                        <% total = total + (product.productId.price * product.qty) %>
                         
                     <% } %>
                     <tr>
