@@ -1,0 +1,53 @@
+<%- include('../includes/head.ejs') %>
+    <link rel="stylesheet" href="css/table.css">
+    </head>
+
+    <body>
+        <%- include('../includes/navigation.ejs') %>
+        <main>
+            <% if (products.length > 0) { %>
+                <h1>Cart Items</h1>
+                <table>
+                    <tr>
+                        <th>Title</th>
+                        <th>Qty</th>
+                        <th>Price/item</th>
+                        <th>Price</th>
+                        <th>Action</th>
+                    </tr>
+                    <% let total = 0 %>
+                    <% for (product of products) { %>
+                        
+                        <tr>
+                            <td><%= product.title %></td>
+                            <td><%= product.cartItems.qty %></td>
+                            <td><%= product.price %></td>
+                            <td><%= product.price * product.cartItems.qty %></td>
+                            <td>
+                                <form action="/cart-delete-item" method="post">
+                                    <input type="hidden" name="productId" value="<%= product.id %>">
+                                    <input type="hidden" name="price" value="<%= product.price %>">
+                                    <button type="submit" class="btn">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        <% total = total + (product.price * product.cartItems.qty) %>
+                        
+                    <% } %>
+                    <tr>
+                        <td colspan="4" >Total Price</td>
+                        <td><%= total.toFixed(2) %></td>
+                    </tr>
+                </table>
+                <hr>
+                
+                <form action="/create-orders" method="post">
+                    <button type="submit" class="btn">Order Now</button>
+                </form>
+
+                  
+            <% } else {%>
+                <h1>Empty Cart</h1>
+            <% } %>
+        </main>
+<%- include('../includes/end.ejs') %>
