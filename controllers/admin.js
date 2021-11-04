@@ -18,7 +18,8 @@ exports.postAddProducts = (req, res) => {
         title: title,
         price: price,
         description: description,
-        imageUrl: imageUrl
+        imageUrl: imageUrl,
+        userId: req.user
     })
     product.save()
         .then(result => {
@@ -29,6 +30,8 @@ exports.postAddProducts = (req, res) => {
 
 exports.getProducts = (req, res) => {
     Products.find()
+    // .select('title price imageUrl -_id') // Select untuk mengambil beberapa field saja (title price imageUrl). Tanda minus (-) brarti tidak mengambil field dalam hal ini tidak mengambil field _id
+    // .populate('userId', 'name') // Populate berguna untuk referensi, mengambil data dari collection yang telah didefinisikan dischema. Paramater pertama (userId) merupakan id user dari collection user artinya mengambil data dari collection user dengan id tersebut, kemudian paramter kedua (name) hanya mengambil field nama saja, hampir sama dengan perintah Select
     .then(products => {
         res.render('admin/products', {
             prods: products,

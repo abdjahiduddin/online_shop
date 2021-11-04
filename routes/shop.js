@@ -15,13 +15,13 @@ routes.get('/products', shopController.getProducts)
 
 routes.get('/product/:id', shopController.getProductDetails)
 
-// routes.route('/cart').get(shopController.getCart).post(shopController.postCart)
+routes.route('/cart').get(shopController.getCart).post(shopController.postCart)
 
-// routes.post('/cart-delete-item', shopController.postCartDeleteItem)
+routes.post('/cart-delete-item', shopController.postCartDeleteItem)
 
-// routes.get('/orders', shopController.getOrders)
+routes.get('/orders', shopController.getOrders)
 
-// routes.post('/create-orders', shopController.postOrders)
+routes.post('/create-orders', shopController.postOrders)
 
 // // routes.get('/checkout', shopController.getCheckout)
 
