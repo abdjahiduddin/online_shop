@@ -20,7 +20,12 @@
                 <label for="confirmPassword">Confirm Password</label>
                 <input type="password" name="confirmPassword" id="confirmPassword">
             </div>
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <button class="btn" type="submit">Login</button>
         </form>
+        <% if(errorMessage) { %>
+            <br>
+            <div class="user-message user-message--error"><%= errorMessage %></div>
+        <% } %>
     </main>
 <%- include('../includes/end.ejs') %>
