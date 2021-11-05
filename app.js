@@ -9,16 +9,20 @@ const session = require('express-session')
 const MongoDBSessionStore =  require('connect-mongodb-session')(session)
 const csrf = require('csurf')
 const flash = require('connect-flash')
+const dotenv = require('dotenv')
+
+dotenv.config()
 
 // Import Controller
 const errorController = require('./controllers/error')
 
-const MONGODB_URI = 'mongodb+srv://node_user:toor@freecodecamp.yulo9.mongodb.net/node_db?retryWrites=true&w=majority'
+const MONGODB_URI = process.env.MONGODB_URI
 
 // Import Routes
 const adminRoutes = require('./routes/admin')
 const shopRoutes = require('./routes/shop')
 const authRoutes = require('./routes/auth')
+const { getEnvironmentData } = require('worker_threads')
 
 const app = express()
 
