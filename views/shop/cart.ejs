@@ -25,6 +25,7 @@
                             <td><%= product.productId.price * product.qty %></td>
                             <td>
                                 <form action="/cart-delete-item" method="post">
+                                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                                     <input type="hidden" name="productId" value="<%= product.productId._id %>">
                                     <input type="hidden" name="price" value="<%= product.productId.price %>">
                                     <button type="submit" class="btn">Delete</button>
@@ -42,6 +43,7 @@
                 <hr>
                 
                 <form action="/create-orders" method="post">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <button type="submit" class="btn">Order Now</button>
                 </form>
 

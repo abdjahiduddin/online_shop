@@ -7,6 +7,8 @@ const bodyParser = require('body-parser')
 const mongoose = require('mongoose')
 const session = require('express-session')
 const MongoDBSessionStore =  require('connect-mongodb-session')(session)
+const csrf = require('csurf')
+const flash = require('connect-flash')
 
 // Import Controller
 const errorController = require('./controllers/error')
@@ -25,6 +27,8 @@ const store = new MongoDBSessionStore({
     collection: 'sessions'
 })
 
+const csrfProtection = csrf()
+
 console.log("Start Apps....")
 
 // EJS Template Engine
@@ -37,8 +41,13 @@ app.use(
     session({ secret: 'my secret', resave: false, saveUninitialized: false, store: store})
 )
 
+app.use(csrfProtection)
+app.use(flash())
+
 app.use((req, res, next) => {
     console.log(req.path, '-', req.method)
+    res.locals.isAuthenticated = req.session.isLogin
+    res.locals.csrfToken = req.csrfToken()
     next()
 })
 

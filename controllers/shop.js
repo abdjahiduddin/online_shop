@@ -8,8 +8,7 @@ exports.getIndex = (req, res) => {
             res.render('shop/index', {
                 prods: products,
                 pageTitle: 'Shop',
-                path: 'shop',
-                isAuthenticated: req.session.isLogin
+                path: 'shop'
             })
         })
         .catch(err => console.log(err))
@@ -21,8 +20,7 @@ exports.getProducts = (req, res) => {
             res.render('shop/product-list', {
                 prods: products,
                 pageTitle: 'Your Products',
-                path: 'user-products',
-                isAuthenticated: req.session.isLogin
+                path: 'user-products'
             })
         })
         .catch(err => console.log(err))
@@ -36,7 +34,6 @@ exports.getProductDetails = (req, res) => {
                 product: product,
                 pageTitle: product.title,
                 path: 'user-products',
-                isAuthenticated: req.session.isLogin
             })
         })
         .catch(err => console.log(err))
@@ -44,48 +41,38 @@ exports.getProductDetails = (req, res) => {
 }
 
 exports.getCart = (req, res) => {
-    if (req.session.isLogin !== undefined) {
-        const id = req.session.user._id
-        Users.findById(id).populate('cart.items.productId')
+    const id = req.session.user._id
+    Users.findById(id).populate('cart.items.productId')
         .then(user => {
             const products = user.cart.items
             return res.render('shop/cart', {
                 pageTitle: 'Your Cart',
                 path: 'cart',
-                products: products,
-                isAuthenticated: req.session.isLogin
+                products: products
             })
         })
-        .catch(err => console.log(err))   
-    } else {
-        res.redirect('/login')
-    }
+        .catch(err => console.log(err))
 }
 
 
 exports.postCart = (req, res) => {
     const productId = req.body.productId
+    const id = req.session.user._id
 
-    if (req.session.isLogin !== undefined) {
-        const id = req.session.user._id
-    
-        Users.findById(id)
-            .then(user => {
-                return user.addToCart(productId)
-            })
-            .then(result => {
-                res.redirect('/cart')
-            })
-            .catch(err => console.log(err));
-    } else {
-        res.redirect('/login')
-    }
+    Users.findById(id)
+        .then(user => {
+            return user.addToCart(productId)
+        })
+        .then(result => {
+            res.redirect('/cart')
+        })
+        .catch(err => console.log(err))
 }
 
 exports.postCartDeleteItem = (req, res) => {
     const productId = req.body.productId
     const id = req.session.user._id
-    
+
     Users.findById(id)
         .then(user => {
             return user.removeItemFromCart(productId)
@@ -98,21 +85,15 @@ exports.postCartDeleteItem = (req, res) => {
 }
 
 exports.getOrders = (req, res) => {
-    if (req.session.isLogin !== undefined) {
-        Orders.find({ 'user.userId': req.session.user._id })
-            .then(orders => {
-                res.render('shop/orders', {
-                    pageTitle: 'Your Orders',
-                    path: 'orders',
-                    orders: orders,
-                    isAuthenticated: req.session.isLogin
-                })
+    Orders.find({ 'user.userId': req.session.user._id })
+        .then(orders => {
+            res.render('shop/orders', {
+                pageTitle: 'Your Orders',
+                path: 'orders',
+                orders: orders
             })
-            .catch(err => console.log(err))
-    } else {
-        res.redirect('/login')
-    }
-
+        })
+        .catch(err => console.log(err))
 }
 
 exports.postOrders = (req, res) => {
@@ -123,7 +104,7 @@ exports.postOrders = (req, res) => {
         .then(user => {
             userObj = user
             const userData = {
-                name: req.session.user.name,
+                email: req.session.user.email,
                 userId: req.session.user
             }
             const products = user.cart.items.map(item => {
@@ -145,7 +126,7 @@ exports.postOrders = (req, res) => {
             return order.save()
         })
         .then(result => {
-            return  userObj.clearCart()
+            return userObj.clearCart()
         })
         .then(() => {
             res.redirect('/orders')
