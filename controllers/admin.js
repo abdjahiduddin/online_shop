@@ -1,10 +1,12 @@
 const Products = require('../models/product')
+const Users = require('../models/users')
 
 exports.getAddProducts = (req, res) => {
     res.render('admin/edit-product', {
         pageTitle: 'Add Product',
         path: 'admin-add-product',
-        edit: false
+        edit: false,
+        isAuthenticated: req.session.isLogin
     })
 }
 
@@ -19,7 +21,7 @@ exports.postAddProducts = (req, res) => {
         price: price,
         description: description,
         imageUrl: imageUrl,
-        userId: req.user
+        userId: req.session.user._id
     })
     product.save()
         .then(result => {
@@ -30,16 +32,17 @@ exports.postAddProducts = (req, res) => {
 
 exports.getProducts = (req, res) => {
     Products.find()
-    // .select('title price imageUrl -_id') // Select untuk mengambil beberapa field saja (title price imageUrl). Tanda minus (-) brarti tidak mengambil field dalam hal ini tidak mengambil field _id
-    // .populate('userId', 'name') // Populate berguna untuk referensi, mengambil data dari collection yang telah didefinisikan dischema. Paramater pertama (userId) merupakan id user dari collection user artinya mengambil data dari collection user dengan id tersebut, kemudian paramter kedua (name) hanya mengambil field nama saja, hampir sama dengan perintah Select
-    .then(products => {
-        res.render('admin/products', {
-            prods: products,
-            pageTitle: 'Admin Products',
-            path: 'admin-products'
+        // .select('title price imageUrl -_id') // Select untuk mengambil beberapa field saja (title price imageUrl). Tanda minus (-) brarti tidak mengambil field dalam hal ini tidak mengambil field _id
+        // .populate('userId', 'name') // Populate berguna untuk referensi, mengambil data dari collection yang telah didefinisikan dischema. Paramater pertama (userId) merupakan id user dari collection user artinya mengambil data dari collection user dengan id tersebut, kemudian paramter kedua (name) hanya mengambil field nama saja, hampir sama dengan perintah Select
+        .then(products => {
+            res.render('admin/products', {
+                prods: products,
+                pageTitle: 'Admin Products',
+                path: 'admin-products',
+                isAuthenticated: req.session.isLogin
+            })
         })
-    })
-    .catch(err => console.log(err))
+        .catch(err => console.log(err))
 }
 
 exports.getEditProducts = (req, res) => {
@@ -47,15 +50,16 @@ exports.getEditProducts = (req, res) => {
     const id = req.params.productId
 
     Products.findById(id)
-    .then(product => {
-        res.render('admin/edit-product', {
-            pageTitle: 'Add Product',
-            path: 'admin-edit-product',
-            edit: editMode,
-            product: product
+        .then(product => {
+            res.render('admin/edit-product', {
+                pageTitle: 'Add Product',
+                path: 'admin-edit-product',
+                edit: editMode,
+                product: product,
+                isAuthenticated: req.session.isLogin
+            })
         })
-    })
-    .catch(err => console.log(err))
+        .catch(err => console.log(err))
 }
 
 exports.postEditProducts = (req, res) => {
@@ -66,7 +70,8 @@ exports.postEditProducts = (req, res) => {
     const description = req.body.description
 
     Products.findById(id)
-        .then( product => {
+        .then(product => {
+            product.userId = req.session.user._id
             product.title = title
             product.imageUrl = imageUrl
             product.price = price
@@ -76,16 +81,23 @@ exports.postEditProducts = (req, res) => {
         .then(result => {
             res.redirect('/admin/products')
         })
-        .catch( err => console.log(err))
-        
+        .catch(err => console.log(err))
+
 }
 
 exports.postDeleteProduct = (req, res) => {
-    const id = req.body.productId
+    const productId = req.body.productId
+    const id = req.session.user._id
 
-    Products.findByIdAndRemove(id)
+    Products.findByIdAndRemove(productId)
+        .then(result => {
+            return Users.findById(id)
+        })
+        .then(user => {
+            return user.removeItemFromCart(productId)
+        })
         .then(result => {
             res.redirect('/admin/products')
         })
-        .catch(err => console.log(err))        
+        .catch(err => console.log(err))
 }
