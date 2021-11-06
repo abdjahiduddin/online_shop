@@ -1,10 +1,13 @@
 const mongodb = require('mongodb')
 const MongoClient = mongodb.MongoClient
+const dotenv = require('dotenv')
+
+dotenv.config()
 
 let _db
 
 const mongoConnection = callback => {
-    const uri = 'mongodb+srv://node_user:toor@freecodecamp.yulo9.mongodb.net/node_db?retryWrites=true&w=majority'
+    const uri = process.env.MONGODB_URI
     MongoClient.connect(uri)
         .then( connection => {
             console.log('Connected to MongoDB !!')

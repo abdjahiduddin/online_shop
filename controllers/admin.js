@@ -35,7 +35,6 @@ exports.getProducts = (req, res) => {
         // .select('title price imageUrl -_id') // Select untuk mengambil beberapa field saja (title price imageUrl). Tanda minus (-) brarti tidak mengambil field dalam hal ini tidak mengambil field _id
         // .populate('userId', 'name') // Populate berguna untuk referensi, mengambil data dari collection yang telah didefinisikan dischema. Paramater pertama (userId) merupakan id user dari collection user artinya mengambil data dari collection user dengan id tersebut, kemudian paramter kedua (name) hanya mengambil field nama saja, hampir sama dengan perintah Select
         .then(products => {
-            console.log(products)
             res.render('admin/products', {
                 prods: products,
                 pageTitle: 'Admin Products',
@@ -70,15 +69,18 @@ exports.postEditProducts = (req, res) => {
 
     Products.findById(id)
         .then(product => {
+            if (product.userId.toString() !== req.session.user._id.toString() ) {
+                return res.redirect('/')
+            }
             product.userId = req.session.user._id
             product.title = title
             product.imageUrl = imageUrl
             product.price = price
             product.description = description
             return product.save()
-        })
-        .then(result => {
-            res.redirect('/admin/products')
+            .then(result => {
+                res.redirect('/admin/products')
+            })
         })
         .catch(err => console.log(err))
 
@@ -88,7 +90,7 @@ exports.postDeleteProduct = (req, res) => {
     const productId = req.body.productId
     const id = req.session.user._id
 
-    Products.findByIdAndRemove(productId)
+    Products.deleteOne({ _id: productId, userId: id })
         .then(result => {
             return Users.findById(id)
         })
