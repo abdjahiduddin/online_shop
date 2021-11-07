@@ -1,3 +1,5 @@
+const { validationResult } = require('express-validator')
+
 const Products = require('../models/product')
 const Users = require('../models/users')
 
@@ -5,7 +7,10 @@ exports.getAddProducts = (req, res) => {
     res.render('admin/edit-product', {
         pageTitle: 'Add Product',
         path: 'admin-add-product',
-        edit: false
+        edit: false,
+        hasError: false,
+        errorMessage: null,
+        allErrors: []
     })
 }
 
@@ -14,6 +19,25 @@ exports.postAddProducts = (req, res) => {
     const imageUrl = req.body.imageUrl
     const price = req.body.price
     const description = req.body.description
+
+    const errors = validationResult(req)
+
+    if (!errors.isEmpty()) {
+        return res.status(422).render('admin/edit-product', {
+            pageTitle: 'Add Product',
+            path: 'admin-add-product',
+            edit: false,
+            hasError: true,
+            errorMessage: errors.array()[0].msg,
+            product: {
+                title: title,
+                imageUrl: imageUrl,
+                price: price,
+                description: description
+            },
+            allErrors: errors.array()
+        })
+    }
 
     const product = new Products({
         title: title,
@@ -38,7 +62,7 @@ exports.getProducts = (req, res) => {
             res.render('admin/products', {
                 prods: products,
                 pageTitle: 'Admin Products',
-                path: 'admin-products'
+                path: 'admin-products',
             })
         })
         .catch(err => console.log(err))
@@ -51,10 +75,13 @@ exports.getEditProducts = (req, res) => {
     Products.findById(id)
         .then(product => {
             res.render('admin/edit-product', {
-                pageTitle: 'Add Product',
+                pageTitle: 'Edit Product',
                 path: 'admin-edit-product',
                 edit: editMode,
-                product: product
+                product: product,
+                hasError: false,
+                errorMessage: null,
+                allErrors: []
             })
         })
         .catch(err => console.log(err))
@@ -66,6 +93,26 @@ exports.postEditProducts = (req, res) => {
     const imageUrl = req.body.imageUrl
     const price = req.body.price
     const description = req.body.description
+
+    const errors = validationResult(req)
+
+    if (!errors.isEmpty()) {
+        return res.status(422).render('admin/edit-product', {
+            pageTitle: 'Edit Product',
+            path: 'admin-add-product',
+            edit: true,
+            hasError: true,
+            errorMessage: errors.array()[0].msg,
+            product: {
+                title: title,
+                imageUrl: imageUrl,
+                price: price,
+                description: description,
+                _id: id
+            },
+            allErrors: errors.array()
+        })
+    }
 
     Products.findById(id)
         .then(product => {
