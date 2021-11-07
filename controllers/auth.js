@@ -6,6 +6,7 @@ const Transporter = require('../utils/nodemailer')
 const crypto = require('crypto')
 const bcrypt = require('bcryptjs')
 const dotenv = require('dotenv')
+const { validationResult } = require('express-validator')
 
 dotenv.config()
 
@@ -23,13 +24,35 @@ exports.getLogin = (req, res) => {
         pageTitle: 'Login',
         path: 'login',
         errorMessage: errorMessage,
-        successMessage: successMessage
+        successMessage: successMessage,
+        oldInput: {
+            email: '',
+            password: ''
+        },
+        errorValidation: []
     })
 }
 
 exports.postLogin = (req, res) => {
+    const errorValidation = validationResult(req)
     const email = req.body.email
     const password = req.body.password
+
+    if (!errorValidation.isEmpty()) {
+        const errorMsg = errorValidation.array()[0].msg
+        return res.status(422).render('auth/login', {
+            pageTitle: 'Login',
+            path: 'login',
+            errorMessage: errorMsg,
+            successMessage: null,
+            oldInput: {
+                email: email,
+                password: password
+            },
+            errorValidation: errorValidation.array()
+        }) 
+    }
+
     Users.findOne({ email: email })
         .then(user => {
             if (user) {
@@ -48,16 +71,33 @@ exports.postLogin = (req, res) => {
                                 return res.redirect('/')
                             })
                         }
-                        req.flash('error', 'Invalid Email or Password')
-                        res.redirect('/login')
+                        res.status(422).render('auth/login', {
+                            pageTitle: 'Login',
+                            path: 'login',
+                            errorMessage: 'Invalid Email or Password',
+                            successMessage: null,
+                            oldInput: {
+                                email: email,
+                                password: password
+                            },
+                            errorValidation: []
+                        }) 
                     })
                     .catch(err => {
                         console.log(err)
-                        res.redirect('/login')
                     })
             } else {
-                req.flash('error', 'Invalid Email or Password')
-                res.redirect('/login')
+                res.status(422).render('auth/login', {
+                    pageTitle: 'Login',
+                    path: 'login',
+                    errorMessage: 'Invalid Email or Password',
+                    successMessage: null,
+                    oldInput: {
+                        email: email,
+                        password: password
+                    },
+                    errorValidation: []
+                }) 
             }
         })
         .catch(err => console.log(err))
@@ -78,47 +118,63 @@ exports.getSignUp = (req, res) => {
     res.render('auth/signup', {
         pageTitle: 'Sign Up',
         path: 'signup',
-        errorMessage: message
+        errorMessage: message,
+        oldInput: {
+            email: '',
+            password: '',
+            confirmPassword: ''
+        },
+        errorValidation: []
     })
 }
 
 exports.postSignUp = (req, res) => {
+    const errorValidation = validationResult(req)
+
     const email = req.body.email
     const password = req.body.password
     const confirmPass = req.body.confirmPassword
-    Users.findOne({ email: email })
-        .then(user => {
-            if (user) {
-                req.flash('error', 'Email exists already!!')
-                return res.redirect('/signup')
-            }
 
-            return bcrypt.hash(password, 12)
-                .then(hashPassword => {
-                    const newUser = new Users({
-                        email: email,
-                        password: hashPassword,
-                        cart: { items: [] }
-                    })
-                    return newUser.save()
-                })
-                .then(result => {
-                    res.redirect('/login')
-                    const mailOptions = {
-                        from: `"Our Online Shop" <${process.env.EMAIL_USER}>`, // sender address (who sends)
-                        to: `${email}`, // list of receivers (who receives)
-                        subject: 'SignUp Succeed', // Subject line
-                        text: 'Thanks for joining us ', // plaintext body
-                        html: `<b>Hello ${email} </b><br> This is the first email sent with Nodemailer in Node.js` // html body
-                    }
-                    return Transporter.sendMail(mailOptions)
-                })
-                .then(result => {
-                    console.log('Message Sent: ', result.response)
-                })
-                .catch(err => {
-                    console.log(err)
-                })
+    if (!errorValidation.isEmpty()) {
+        const error = errorValidation.array()[0].msg
+        return res.status(422).render('auth/signup', {
+            pageTitle: 'Sign Up',
+            path: 'signup',
+            errorMessage: error,
+            oldInput: {
+                email: email,
+                password: password,
+                confirmPassword: confirmPass
+            },
+            errorValidation: errorValidation.array()
+        })
+    }
+
+    bcrypt.hash(password, 12)
+        .then(hashPassword => {
+            const newUser = new Users({
+                email: email,
+                password: hashPassword,
+                cart: { items: [] }
+            })
+            return newUser.save()
+        })
+        .then(result => {
+            res.render('auth/signup-succeed', {
+                pageTitle: 'Signup Succeed',
+                path: 'signup-succeed'
+            })
+            const mailOptions = {
+                from: `"Our Online Shop" <${process.env.EMAIL_USER}>`, // sender address (who sends)
+                to: `${email}`, // list of receivers (who receives)
+                subject: 'SignUp Succeed', // Subject line
+                text: 'Thanks for joining us ', // plaintext body
+                html: `<b>Hello ${email} </b><br> This is the first email sent with Nodemailer in Node.js` // html body
+            }
+            return Transporter.sendMail(mailOptions)
+        })
+        .then(result => {
+            console.log('Message Sent: ', result.response)
         })
         .catch(err => {
             console.log(err)
@@ -159,7 +215,10 @@ exports.postReset = (req, res) => {
                 user.resetTokenExpiration = Date.now() + 3600000
                 user.save()
                     .then(result => {
-                        res.redirect('/login')
+                        res.render('auth/check-email',{
+                            pageTitle: 'Reset Password',
+                            path: 'reset-notification'
+                        })
                         const mailOptions = {
                             from: `"Our Online Shop" <${process.env.EMAIL_USER}>`, // sender address (who sends)
                             to: `${email}`, // list of receivers (who receives)
@@ -189,27 +248,27 @@ exports.getNewPassword = (req, res) => {
         message = flashMessage[0]
     }
 
-    Users.findOne({ 
-        resetToken: token, 
-        resetTokenExpiration: { $gt: Date.now() } 
+    Users.findOne({
+        resetToken: token,
+        resetTokenExpiration: { $gt: Date.now() }
     })
-    .then(user => {
-        if (!user) {
-            return res.render('auth/wrong-token', {
-                pageTitle: 'Invalid Token',
-                path: 'wrong-password',
-                errorMessage: null
+        .then(user => {
+            if (!user) {
+                return res.render('auth/wrong-token', {
+                    pageTitle: 'Invalid Token',
+                    path: 'wrong-password',
+                    errorMessage: null
+                })
+            }
+            res.render('auth/new-password', {
+                pageTitle: 'Enter New Password',
+                path: 'new-password',
+                errorMessage: message,
+                userId: user._id,
+                token: token
             })
-        }
-        res.render('auth/new-password', {
-            pageTitle: 'Enter New Password',
-            path: 'new-password',
-            errorMessage: message,
-            userId: user._id,
-            token: token
         })
-    })
-    .catch(err => console.log(err))
+        .catch(err => console.log(err))
 }
 
 exports.postNewPassword = (req, res) => {
@@ -218,26 +277,28 @@ exports.postNewPassword = (req, res) => {
     const newPassword = req.body.password
     let updateUser
 
-    Users.findOne({ 
-        resetToken: token, 
+    Users.findOne({
+        resetToken: token,
         resetTokenExpiration: { $gt: Date.now() },
-        _id: userId 
+        _id: userId
     })
-    .then(user => {
-        updateUser = user
-        return bcrypt.hash(newPassword, 12)
-    })
-    .then(hashPassword => {
-        updateUser.password = hashPassword
-        updateUser.resetToken = undefined
-        updateUser.resetTokenExpiration = undefined
-        return updateUser.save()
-    })
-    .then(result => {
-        req.flash('success','Reset Password Succeed')
-        res.redirect('/login')
-    })
-    .catch(err => console.log(err))
+        .then(user => {
+            updateUser = user
+            return bcrypt.hash(newPassword, 12)
+        })
+        .then(hashPassword => {
+            updateUser.password = hashPassword
+            updateUser.resetToken = undefined
+            updateUser.resetTokenExpiration = undefined
+            return updateUser.save()
+        })
+        .then(result => {
+            res.render('auth/reset-succeed',{
+                pageTitle: 'Reset Password Succeed',
+                path: 'reset-succeed'
+            })
+        })
+        .catch(err => console.log(err))
 }
 // Contoh
 // exports.postLogin = (req, res) => {
