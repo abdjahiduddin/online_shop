@@ -33,7 +33,7 @@ exports.getLogin = (req, res) => {
     })
 }
 
-exports.postLogin = (req, res) => {
+exports.postLogin = (req, res, next) => {
     const errorValidation = validationResult(req)
     const email = req.body.email
     const password = req.body.password
@@ -100,7 +100,11 @@ exports.postLogin = (req, res) => {
                 }) 
             }
         })
-        .catch(err => console.log(err))
+        .catch(err => {
+            const error = new Error(err)
+            error.httpStatusCode = 500
+            return next(error)
+        })
 }
 
 exports.postLogout = (req, res) => {
@@ -128,7 +132,7 @@ exports.getSignUp = (req, res) => {
     })
 }
 
-exports.postSignUp = (req, res) => {
+exports.postSignUp = (req, res, next) => {
     const errorValidation = validationResult(req)
 
     const email = req.body.email
@@ -177,7 +181,9 @@ exports.postSignUp = (req, res) => {
             console.log('Message Sent: ', result.response)
         })
         .catch(err => {
-            console.log(err)
+            const error = new Error(err)
+            error.httpStatusCode = 500
+            return next(error)
         })
 }
 
@@ -194,7 +200,7 @@ exports.getReset = (req, res) => {
     })
 }
 
-exports.postReset = (req, res) => {
+exports.postReset = (req, res, next) => {
     const email = req.body.email
     let token
 
@@ -234,13 +240,21 @@ exports.postReset = (req, res) => {
                     .then(info => {
                         console.log('Message Sent: ', info.response)
                     })
-                    .catch(err => console.log(err))
+                    .catch(err => {
+                        const error = new Error(err)
+                        error.httpStatusCode = 500
+                        return next(error)
+                    })
             })
         })
-        .catch(err => console.log(err))
+        .catch(err => {
+            const error = new Error(err)
+            error.httpStatusCode = 500
+            return next(error)
+        })
 }
 
-exports.getNewPassword = (req, res) => {
+exports.getNewPassword = (req, res, next) => {
     const token = req.params.token
     const flashMessage = req.flash('error')
     let message = null
@@ -268,10 +282,14 @@ exports.getNewPassword = (req, res) => {
                 token: token
             })
         })
-        .catch(err => console.log(err))
+        .catch(err => {
+            const error = new Error(err)
+            error.httpStatusCode = 500
+            return next(error)
+        })
 }
 
-exports.postNewPassword = (req, res) => {
+exports.postNewPassword = (req, res, next) => {
     const userId = req.body.userId
     const token = req.body.token
     const newPassword = req.body.password
@@ -298,7 +316,11 @@ exports.postNewPassword = (req, res) => {
                 path: 'reset-succeed'
             })
         })
-        .catch(err => console.log(err))
+        .catch(err => {
+            const error = new Error(err)
+            error.httpStatusCode = 500
+            return next(error)
+        })
 }
 // Contoh
 // exports.postLogin = (req, res) => {

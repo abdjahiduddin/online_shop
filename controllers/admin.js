@@ -14,7 +14,7 @@ exports.getAddProducts = (req, res) => {
     })
 }
 
-exports.postAddProducts = (req, res) => {
+exports.postAddProducts = (req, res, next) => {
     const title = req.body.title
     const imageUrl = req.body.imageUrl
     const price = req.body.price
@@ -50,10 +50,14 @@ exports.postAddProducts = (req, res) => {
         .then(result => {
             res.redirect('/products')
         })
-        .catch(err => console.log(err))
+        .catch(err => {
+            const error = new Error(err)
+            error.httpStatusCode = 500
+            return next(error)
+        })
 }
 
-exports.getProducts = (req, res) => {
+exports.getProducts = (req, res, next) => {
     const userId = req.session.user._id
     Products.find({ userId: userId })
         // .select('title price imageUrl -_id') // Select untuk mengambil beberapa field saja (title price imageUrl). Tanda minus (-) brarti tidak mengambil field dalam hal ini tidak mengambil field _id
@@ -65,10 +69,14 @@ exports.getProducts = (req, res) => {
                 path: 'admin-products',
             })
         })
-        .catch(err => console.log(err))
+        .catch(err => {
+            const error = new Error(err)
+            error.httpStatusCode = 500
+            return next(error)
+        })
 }
 
-exports.getEditProducts = (req, res) => {
+exports.getEditProducts = (req, res, next) => {
     const editMode = req.query.edit
     const id = req.params.productId
 
@@ -84,10 +92,14 @@ exports.getEditProducts = (req, res) => {
                 allErrors: []
             })
         })
-        .catch(err => console.log(err))
+        .catch(err => {
+            const error = new Error(err)
+            error.httpStatusCode = 500
+            return next(error)
+        })
 }
 
-exports.postEditProducts = (req, res) => {
+exports.postEditProducts = (req, res, next) => {
     const id = req.body.productId
     const title = req.body.title
     const imageUrl = req.body.imageUrl
@@ -129,11 +141,15 @@ exports.postEditProducts = (req, res) => {
                 res.redirect('/admin/products')
             })
         })
-        .catch(err => console.log(err))
+        .catch(err => {
+            const error = new Error(err)
+            error.httpStatusCode = 500
+            return next(error)
+        })
 
 }
 
-exports.postDeleteProduct = (req, res) => {
+exports.postDeleteProduct = (req, res, next) => {
     const productId = req.body.productId
     const id = req.session.user._id
 
@@ -147,5 +163,9 @@ exports.postDeleteProduct = (req, res) => {
         .then(result => {
             res.redirect('/admin/products')
         })
-        .catch(err => console.log(err))
+        .catch(err => {
+            const error = new Error(err)
+            error.httpStatusCode = 500
+            return next(error)
+        })
 }
