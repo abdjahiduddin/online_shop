@@ -58,8 +58,16 @@ app.use('/admin', adminRoutes)
 app.use(shopRoutes)
 app.use(authRoutes)
 
+// Error Handling
+app.get('/500', errorController.get500)
 app.use(errorController.get404)
-
+app.use((error, req, res, next) => {
+    // res.redirect('/500')
+    res.status(error.httpStatusCode).render('500', { 
+        pageTitle: 'Error Occurred!', 
+        path: '500'
+    })
+})
 mongoose.connect(MONGODB_URI)
     .then( connect => {
         // const user = new Users({

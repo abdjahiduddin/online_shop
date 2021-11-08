@@ -2,7 +2,7 @@ const Products = require('../models/product')
 const Orders = require('../models/order')
 const Users = require('../models/users')
 
-exports.getIndex = (req, res) => {
+exports.getIndex = (req, res, next) => {
     Products.find()
         .then(products => {
             res.render('shop/index', {
@@ -11,10 +11,14 @@ exports.getIndex = (req, res) => {
                 path: 'shop'
             })
         })
-        .catch(err => console.log(err))
+        .catch(err => {
+            const error = new Error(err)
+            error.httpStatusCode = 500
+            return next(error)
+        })
 }
 
-exports.getProducts = (req, res) => {
+exports.getProducts = (req, res, next) => {
     Products.find()
         .then(products => {
             res.render('shop/product-list', {
@@ -23,10 +27,14 @@ exports.getProducts = (req, res) => {
                 path: 'user-products'
             })
         })
-        .catch(err => console.log(err))
+        .catch(err => {
+            const error = new Error(err)
+            error.httpStatusCode = 500
+            return next(error)
+        })
 }
 
-exports.getProductDetails = (req, res) => {
+exports.getProductDetails = (req, res, next) => {
     const prodId = req.params.id
     Products.findById(prodId)
         .then(product => {
@@ -36,11 +44,15 @@ exports.getProductDetails = (req, res) => {
                 path: 'user-products',
             })
         })
-        .catch(err => console.log(err))
+        .catch(err => {
+            const error = new Error(err)
+            error.httpStatusCode = 500
+            return next(error)
+        })
 
 }
 
-exports.getCart = (req, res) => {
+exports.getCart = (req, res, next) => {
     const id = req.session.user._id
     Users.findById(id).populate('cart.items.productId')
         .then(user => {
@@ -51,11 +63,15 @@ exports.getCart = (req, res) => {
                 products: products
             })
         })
-        .catch(err => console.log(err))
+        .catch(err => {
+            const error = new Error(err)
+            error.httpStatusCode = 500
+            return next(error)
+        })
 }
 
 
-exports.postCart = (req, res) => {
+exports.postCart = (req, res, next) => {
     const productId = req.body.productId
     const id = req.session.user._id
 
@@ -66,10 +82,14 @@ exports.postCart = (req, res) => {
         .then(result => {
             res.redirect('/cart')
         })
-        .catch(err => console.log(err))
+        .catch(err => {
+            const error = new Error(err)
+            error.httpStatusCode = 500
+            return next(error)
+        })
 }
 
-exports.postCartDeleteItem = (req, res) => {
+exports.postCartDeleteItem = (req, res, next) => {
     const productId = req.body.productId
     const id = req.session.user._id
 
@@ -80,11 +100,15 @@ exports.postCartDeleteItem = (req, res) => {
         .then(result => {
             res.redirect('/cart')
         })
-        .catch(err => console.log(err))
+        .catch(err => {
+            const error = new Error(err)
+            error.httpStatusCode = 500
+            return next(error)
+        })
 
 }
 
-exports.getOrders = (req, res) => {
+exports.getOrders = (req, res, next) => {
     Orders.find({ 'user.userId': req.session.user._id })
         .then(orders => {
             res.render('shop/orders', {
@@ -93,10 +117,14 @@ exports.getOrders = (req, res) => {
                 orders: orders
             })
         })
-        .catch(err => console.log(err))
+        .catch(err => {
+            const error = new Error(err)
+            error.httpStatusCode = 500
+            return next(error)
+        })
 }
 
-exports.postOrders = (req, res) => {
+exports.postOrders = (req, res, next) => {
     const id = req.session.user._id
     let userObj
 
@@ -131,7 +159,11 @@ exports.postOrders = (req, res) => {
         .then(() => {
             res.redirect('/orders')
         })
-        .catch(err => console.log(err))
+        .catch(err => {
+            const error = new Error(err)
+            error.httpStatusCode = 500
+            return next(error)
+        })
 }
 
 // exports.getCheckout = (req, res) => {
