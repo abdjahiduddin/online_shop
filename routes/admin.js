@@ -15,7 +15,6 @@ routes.route('/add-product')
     .get(isAuth, adminController.getAddProducts)
     .post(isAuth,[
         body('title').trim().isString().isLength({ min: 3 }),
-        body('imageUrl').isURL().trim(),
         body('price').isFloat().trim(),
         body('description').isLength({ min: 5 }).trim()
     ], adminController.postAddProducts)
@@ -27,7 +26,6 @@ routes.get('/edit-product/:productId', isAuth, adminController.getEditProducts)
 routes.post('/edit-product', 
     isAuth,[
         body('title').trim().isString().isLength({ min: 3 }),
-        body('imageUrl').isURL().trim(),
         body('price').isFloat().trim(),
         body('description').isLength({ min: 5 }).trim()
     ], adminController.postEditProducts)

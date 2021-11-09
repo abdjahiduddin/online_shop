@@ -24,6 +24,8 @@ routes.get('/orders', isAuth, shopController.getOrders)
 
 routes.post('/create-orders', isAuth, shopController.postOrders)
 
+routes.get('/invoices/:orderId', isAuth, shopController.getInvoice)
+
 // // routes.get('/checkout', shopController.getCheckout)
 
 module.exports = routes

@@ -9,6 +9,7 @@ const session = require('express-session')
 const MongoDBSessionStore =  require('connect-mongodb-session')(session)
 const csrf = require('csurf')
 const flash = require('connect-flash')
+const multer =  require('multer')
 const dotenv = require('dotenv')
 
 dotenv.config()
@@ -30,23 +31,50 @@ const store = new MongoDBSessionStore({
     collection: 'sessions'
 })
 
+// CSRF Instantiation
 const csrfProtection = csrf()
 
-console.log("Start Apps....")
+// Multer File Storage Configuration
+const fileStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'images')
+    },
+    filename: (req, file, cb) => {
+        cb(null, file.fieldname+'_'+Date.now()+'_'+file.originalname)
+    }
+})
+// Multer File Filter Configuration
+const fileFilter = (req, file, cb) => {
+    if (file.mimetype === 'image/png' || file.mimetype === 'image/jpeg' || file.mimetype === 'image/jpg'){
+        cb(null, true)
+    } else {
+        cb(null, false)
+    }
+}
 
 // EJS Template Engine
 app.set('view engine', 'ejs')
 app.set('views', 'views')
 
+// Body Parser Configurtion
 app.use(bodyParser.urlencoded({extended: false}))
+// Multer Configuration
+app.use(multer({ storage: fileStorage, fileFilter: fileFilter }).single('image'))
+// Exposes Static Folder (Public)
 app.use(express.static(path.join(__dirname, 'public')))
+// Exposes Static Folder (Images)
+app.use(express.static(path.join(__dirname, 'images')))
+// app.use(express.static('images',path.join(__dirname, 'images')))
+// Session Configuration
 app.use(
     session({ secret: 'my secret', resave: false, saveUninitialized: false, store: store})
 )
-
+// CSRF Condiguration
 app.use(csrfProtection)
+// Flash Configuration
 app.use(flash())
 
+// Middleware for define login state and csrf token 
 app.use((req, res, next) => {
     console.log(req.path, '-', req.method)
     res.locals.isAuthenticated = req.session.isLogin
@@ -54,6 +82,7 @@ app.use((req, res, next) => {
     next()
 })
 
+// Routes
 app.use('/admin', adminRoutes)
 app.use(shopRoutes)
 app.use(authRoutes)
@@ -63,21 +92,16 @@ app.get('/500', errorController.get500)
 app.use(errorController.get404)
 app.use((error, req, res, next) => {
     // res.redirect('/500')
+    console.log(error)
     res.status(error.httpStatusCode).render('500', { 
         pageTitle: 'Error Occurred!', 
         path: '500'
     })
 })
+
 mongoose.connect(MONGODB_URI)
-    .then( connect => {
-        // const user = new Users({
-        //     name: 'jay', 
-        //     email:'jay@test.com',
-        //     cart: {
-        //         items: []
-        //     }
-        // })
-        // user.save()
+.then( connect => {
+        console.log("Start Apps....")
         console.log('Connected to MongoDB!')
         app.listen(3000)
     })
