@@ -1,7 +1,10 @@
 const { validationResult } = require('express-validator')
+const path = require('path')
 
 const Products = require('../models/product')
 const Users = require('../models/users')
+
+const fileHelper = require('../utils/file-helper')
 
 exports.getAddProducts = (req, res) => {
     res.render('admin/edit-product', {
@@ -16,26 +19,44 @@ exports.getAddProducts = (req, res) => {
 
 exports.postAddProducts = (req, res, next) => {
     const title = req.body.title
-    const imageUrl = req.body.imageUrl
+    const imageUrl = req.file
     const price = req.body.price
     const description = req.body.description
 
     const errors = validationResult(req)
-
-    if (!errors.isEmpty()) {
+    if (!imageUrl) {
+        errorMessage = 'Attached file is not an image (jpeg/jpg/png).'
+        allErrors = []
         return res.status(422).render('admin/edit-product', {
             pageTitle: 'Add Product',
             path: 'admin-add-product',
             edit: false,
             hasError: true,
-            errorMessage: errors.array()[0].msg,
+            errorMessage: errorMessage,
             product: {
                 title: title,
-                imageUrl: imageUrl,
                 price: price,
                 description: description
             },
-            allErrors: errors.array()
+            allErrors: allErrors
+        })
+    }
+
+    if (!errors.isEmpty()) {
+        let errorMessage = errors.array()[0].msg
+        let allErrors = errors.array()
+        return res.status(422).render('admin/edit-product', {
+            pageTitle: 'Add Product',
+            path: 'admin-add-product',
+            edit: false,
+            hasError: true,
+            errorMessage: errorMessage,
+            product: {
+                title: title,
+                price: price,
+                description: description
+            },
+            allErrors: allErrors
         })
     }
 
@@ -43,7 +64,7 @@ exports.postAddProducts = (req, res, next) => {
         title: title,
         price: price,
         description: description,
-        imageUrl: imageUrl,
+        imageUrl: imageUrl.filename,
         userId: req.session.user._id
     })
     product.save()
@@ -102,27 +123,28 @@ exports.getEditProducts = (req, res, next) => {
 exports.postEditProducts = (req, res, next) => {
     const id = req.body.productId
     const title = req.body.title
-    const imageUrl = req.body.imageUrl
+    const imageUrl = req.file
     const price = req.body.price
     const description = req.body.description
 
     const errors = validationResult(req)
 
     if (!errors.isEmpty()) {
+        let errorMessage = errors.array()[0].msg
+        let allErrors = errors.array()
         return res.status(422).render('admin/edit-product', {
             pageTitle: 'Edit Product',
             path: 'admin-add-product',
             edit: true,
             hasError: true,
-            errorMessage: errors.array()[0].msg,
+            errorMessage: errorMessage,
             product: {
                 title: title,
-                imageUrl: imageUrl,
                 price: price,
                 description: description,
                 _id: id
             },
-            allErrors: errors.array()
+            allErrors: allErrors
         })
     }
 
@@ -131,9 +153,13 @@ exports.postEditProducts = (req, res, next) => {
             if (product.userId.toString() !== req.session.user._id.toString() ) {
                 return res.redirect('/')
             }
+            if (imageUrl) {
+                const filePath = path.join('images', product.imageUrl)
+                fileHelper.deleteFile(filePath)
+                product.imageUrl = imageUrl.filename
+            }
             product.userId = req.session.user._id
             product.title = title
-            product.imageUrl = imageUrl
             product.price = price
             product.description = description
             return product.save()
@@ -153,7 +179,13 @@ exports.postDeleteProduct = (req, res, next) => {
     const productId = req.body.productId
     const id = req.session.user._id
 
-    Products.deleteOne({ _id: productId, userId: id })
+    Products.findById(productId)
+        .then(product => {
+            const filePath = path.join('images', product.imageUrl)
+            fileHelper.deleteFile(filePath)
+
+            return Products.deleteOne({ _id: productId, userId: id })
+        })
         .then(result => {
             return Users.findById(id)
         })
@@ -168,4 +200,7 @@ exports.postDeleteProduct = (req, res, next) => {
             error.httpStatusCode = 500
             return next(error)
         })
+
+    
+        
 }

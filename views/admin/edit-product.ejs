@@ -7,7 +7,7 @@
     <%- include('../includes/navigation.ejs') %>
 
     <main>
-        <form class="product-form" action="/admin/<% if (edit) { %>edit-product<% } else { %>add-product<% } %>" method="POST">
+        <form class="product-form" action="/admin/<% if (edit) { %>edit-product<% } else { %>add-product<% } %>" method="POST" enctype="multipart/form-data">
             <div class="form-control">
                 <label for="title">Title</label>
                 <input 
@@ -17,7 +17,7 @@
                     id="title" 
                     value="<%if(edit || hasError){%><%= product.title %><%}%>">
             </div>
-            <div class="form-control">
+            <!-- <div class="form-control">
                 <label for="imageUrl">Image URL</label>
                 <input 
                     class="<%= allErrors.find(e => e.param === 'imageUrl') ? 'invalid' : '' %>"
@@ -25,6 +25,13 @@
                     name="imageUrl" 
                     id="imageUrl" 
                     value="<%if(edit || hasError){%><%= product.imageUrl %><%}%>">
+            </div> -->
+            <div class="form-control">
+                <label for="image">Image</label>
+                <input 
+                    type="file" 
+                    name="image" 
+                    id="image">
             </div>
             <div class="form-control">
                 <label for="price">Price</label>
@@ -45,6 +52,7 @@
                     rows="5"><%if(edit || hasError){%><%=product.description%><%}%></textarea>
             </div>
             <% if (edit || hasError) { %>
+                <!-- <input type="hidden" name="oldImageUrl" value="<%= product.oldImageUrl %>"> -->
                 <input type="hidden" name="productId" value="<%= product._id %>">
             <% } %>
             <input type="hidden" name="_csrf" value="<%= csrfToken %>">
