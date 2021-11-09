@@ -6,13 +6,30 @@ const Products = require('../models/product')
 const Orders = require('../models/order')
 const Users = require('../models/users')
 
+const ITEMS_PER_PAGE = 1
+
 exports.getIndex = (req, res, next) => {
-    Products.find()
+    let page = +req.query.page || 1
+    let totalItems
+
+    Products.find().countDocuments()
+        .then(numProducts => {
+            totalItems = numProducts
+            return Products.find().skip((page - 1 ) * ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE)
+        })
         .then(products => {
+            const maxPage = Math.ceil(totalItems / ITEMS_PER_PAGE)
             res.render('shop/index', {
                 prods: products,
                 pageTitle: 'Shop',
-                path: 'shop'
+                path: 'shop',
+                // link: '',
+                currentPage: page,
+                lastPage: maxPage,
+                hasNext: page < maxPage,
+                hasPrevious: page > 1,
+                nextPage: page + 1,
+                previousPage: page - 1  
             })
         })
         .catch(err => {
@@ -23,12 +40,27 @@ exports.getIndex = (req, res, next) => {
 }
 
 exports.getProducts = (req, res, next) => {
-    Products.find()
+    let page = +req.query.page || 1
+    let totalItems
+
+    Products.find().countDocuments()
+        .then(numProducts => {
+            totalItems = numProducts
+            return Products.find().skip((page - 1 ) * ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE)
+        })
         .then(products => {
+            const maxPage = Math.ceil(totalItems / ITEMS_PER_PAGE)
             res.render('shop/product-list', {
                 prods: products,
                 pageTitle: 'Your Products',
-                path: 'user-products'
+                path: 'user-products',
+                // link: '/products',
+                currentPage: page,
+                lastPage: maxPage,
+                hasNext: page < maxPage,
+                hasPrevious: page > 1,
+                nextPage: page + 1,
+                previousPage: page - 1
             })
         })
         .catch(err => {

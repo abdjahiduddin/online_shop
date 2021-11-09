@@ -6,6 +6,8 @@ const Users = require('../models/users')
 
 const fileHelper = require('../utils/file-helper')
 
+const ITEMS_PER_PAGE = 1
+
 exports.getAddProducts = (req, res) => {
     res.render('admin/edit-product', {
         pageTitle: 'Add Product',
@@ -80,14 +82,30 @@ exports.postAddProducts = (req, res, next) => {
 
 exports.getProducts = (req, res, next) => {
     const userId = req.session.user._id
-    Products.find({ userId: userId })
-        // .select('title price imageUrl -_id') // Select untuk mengambil beberapa field saja (title price imageUrl). Tanda minus (-) brarti tidak mengambil field dalam hal ini tidak mengambil field _id
-        // .populate('userId', 'name') // Populate berguna untuk referensi, mengambil data dari collection yang telah didefinisikan dischema. Paramater pertama (userId) merupakan id user dari collection user artinya mengambil data dari collection user dengan id tersebut, kemudian paramter kedua (name) hanya mengambil field nama saja, hampir sama dengan perintah Select
+    
+    let page = +req.query.page || 1
+    let totalItems
+
+    Products.find({ userId: userId }).countDocuments()
+        .then(numProducts => {
+            totalItems = numProducts
+            return Products.find({ userId: userId }).skip((page - 1 ) * ITEMS_PER_PAGE).limit(ITEMS_PER_PAGE)
+                        // .select('title price imageUrl -_id') // Select untuk mengambil beberapa field saja (title price imageUrl). Tanda minus (-) brarti tidak mengambil field dalam hal ini tidak mengambil field _id
+                        // .populate('userId', 'name') // Populate berguna untuk referensi, mengambil data dari collection yang telah didefinisikan dischema. Paramater pertama (userId) merupakan id user dari collection user artinya mengambil data dari collection user dengan id tersebut, kemudian paramter kedua (name) hanya mengambil field nama saja, hampir sama dengan perintah Select
+        })
         .then(products => {
+            const maxPage = Math.ceil(totalItems / ITEMS_PER_PAGE)
             res.render('admin/products', {
                 prods: products,
                 pageTitle: 'Admin Products',
                 path: 'admin-products',
+                // link: '/admin/products',
+                currentPage: page,
+                lastPage: maxPage,
+                hasNext: page < maxPage,
+                hasPrevious: page > 1,
+                nextPage: page + 1,
+                previousPage: page - 1 
             })
         })
         .catch(err => {
