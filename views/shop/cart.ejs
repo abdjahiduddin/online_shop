@@ -42,12 +42,13 @@
                 </table>
                 <hr>
                 
-                <form action="/create-orders" method="post">
+                <!-- <form action="/create-orders" method="post">
                     <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <button type="submit" class="btn">Order Now</button>
-                </form>
-
-                  
+                </form> -->
+                
+                <a href="/checkout" class="btn">Checkout</a>
+                
             <% } else {%>
                 <h1>Empty Cart</h1>
             <% } %>

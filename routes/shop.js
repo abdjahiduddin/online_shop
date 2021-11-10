@@ -22,10 +22,13 @@ routes.post('/cart-delete-item', isAuth, shopController.postCartDeleteItem)
 
 routes.get('/orders', isAuth, shopController.getOrders)
 
-routes.post('/create-orders', isAuth, shopController.postOrders)
+// routes.post('/create-orders', isAuth, shopController.postOrders) Old Checkout Flow
 
 routes.get('/invoices/:orderId', isAuth, shopController.getInvoice)
 
-// // routes.get('/checkout', shopController.getCheckout)
+routes.get('/checkout', shopController.getCheckout)
+
+routes.get('/checkout/success', shopController.getCheckoutSuccess)
+routes.get('/checkout/cancel', shopController.getCheckout)
 
 module.exports = routes
