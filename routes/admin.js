@@ -30,6 +30,6 @@ routes.post('/edit-product',
         body('description').isLength({ min: 5 }).trim()
     ], adminController.postEditProducts)
 
-routes.post('/delete-product', isAuth, adminController.postDeleteProduct)
+routes.delete('/product/:productId', isAuth, adminController.deleteProduct)
 
 module.exports = routes

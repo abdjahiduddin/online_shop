@@ -6,7 +6,7 @@ const Users = require('../models/users')
 
 const fileHelper = require('../utils/file-helper')
 
-const ITEMS_PER_PAGE = 1
+const ITEMS_PER_PAGE = 10
 
 exports.getAddProducts = (req, res) => {
     res.render('admin/edit-product', {
@@ -193,8 +193,8 @@ exports.postEditProducts = (req, res, next) => {
 
 }
 
-exports.postDeleteProduct = (req, res, next) => {
-    const productId = req.body.productId
+exports.deleteProduct = (req, res, next) => {
+    const productId = req.params.productId
     const id = req.session.user._id
 
     Products.findById(productId)
@@ -211,12 +211,16 @@ exports.postDeleteProduct = (req, res, next) => {
             return user.removeItemFromCart(productId)
         })
         .then(result => {
-            res.redirect('/admin/products')
+            res.status(200).json({
+                message: 'Success'
+            })
         })
         .catch(err => {
-            const error = new Error(err)
-            error.httpStatusCode = 500
-            return next(error)
+            // const error = new Error(err)
+            // error.httpStatusCode = 500
+            res.status(500).json({
+                message: 'Delete product failed'
+            })
         })
 
     
