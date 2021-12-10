@@ -17,6 +17,7 @@ pass: 123456
 
 ## Fitur
 - Login dan Signup
+- Menggunakan template engine EJS
 - Menampilkan seluruh daftar produk
 - Menampilkan daftar produk yang hanya dimiliki user tertentu
 - Menambahkan produk baru
