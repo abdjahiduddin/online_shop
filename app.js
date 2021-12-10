@@ -103,6 +103,6 @@ mongoose.connect(MONGODB_URI)
 .then( connect => {
         console.log("Start Apps....")
         console.log('Connected to MongoDB!')
-        app.listen(3000)
+        app.listen(process.env.PORT || 3000)
     })
     .catch( err => console.log(err))
